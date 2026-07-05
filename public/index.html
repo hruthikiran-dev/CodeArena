@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CodeArena — Login</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    /* These styles are specific to this page only */
+
+    /* Full page centered layout — login page has no navbar */
+    .auth-page {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    .auth-container {
+      width: 100%;
+      max-width: 420px;
+    }
+
+    /* The big logo at the top */
+    .auth-logo {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+
+    .auth-logo h1 {
+      font-family: var(--font-mono);
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: -1px;
+    }
+
+    /* The blinking cursor — same as navbar, it's our signature */
+    .auth-logo h1::after {
+      content: '_';
+      animation: blink 1.2s step-end infinite;
+    }
+
+    .auth-logo p {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-top: 0.4rem;
+    }
+
+    /* Tab switcher — "Login" and "Sign Up" tabs */
+    .auth-tabs {
+      display: flex;
+      background: var(--bg-secondary);
+      border-radius: 8px 8px 0 0;
+      border: 1px solid var(--border);
+      border-bottom: none;
+      overflow: hidden;
+    }
+
+    .auth-tab {
+      flex: 1; /* each tab takes equal width */
+      padding: 0.9rem;
+      text-align: center;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      transition: all 0.2s;
+      font-family: var(--font-mono);
+    }
+
+    .auth-tab.active {
+      color: var(--accent);
+      background: var(--bg-tertiary);
+    }
+
+    /* The card that holds the form */
+    .auth-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 0 0 10px 10px;
+      padding: 2rem;
+    }
+
+    /* Error/success message box */
+    .message {
+      padding: 0.75rem 1rem;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      margin-bottom: 1rem;
+      display: none; /* hidden by default, shown by JS */
+    }
+
+    .message.error {
+      background: rgba(239,68,68,0.1);
+      border: 1px solid rgba(239,68,68,0.3);
+      color: var(--error);
+      display: block;
+    }
+
+    .message.success {
+      background: rgba(16,185,129,0.1);
+      border: 1px solid rgba(16,185,129,0.3);
+      color: var(--success);
+      display: block;
+    }
+
+    .btn-full {
+      width: 100%; /* full width button */
+      padding: 0.85rem;
+      font-size: 1rem;
+      margin-top: 0.5rem;
+    }
+
+    .auth-footer {
+      text-align: center;
+      margin-top: 1.5rem;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="auth-page">
+    <div class="auth-container">
+
+      <!-- Logo -->
+      <div class="auth-logo">
+        <h1>CodeArena</h1>
+        <p>Where code meets competition</p>
+      </div>
+
+      <!-- Tab switcher -->
+      <div class="auth-tabs">
+        <!-- onclick calls switchTab() function defined below in JS -->
+        <button class="auth-tab active" onclick="switchTab('login')" id="tab-login">
+          Login
+        </button>
+        <button class="auth-tab" onclick="switchTab('signup')" id="tab-signup">
+          Sign Up
+        </button>
+      </div>
+
+      <!-- Form card -->
+      <div class="auth-card">
+
+        <!-- Message box — shown when there's an error or success -->
+        <div class="message" id="message"></div>
+
+        <!-- ── LOGIN FORM ── -->
+        <div id="form-login">
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="login-email" placeholder="you@example.com" />
+          </div>
+          <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="login-password" placeholder="••••••••" />
+          </div>
+          <!-- onclick calls login() function defined in JS below -->
+          <button class="btn btn-primary btn-full" onclick="login()">
+            Login →
+          </button>
+        </div>
+
+        <!-- ── SIGNUP FORM ── (hidden by default) -->
+        <div id="form-signup" style="display: none;">
+          <div class="form-group">
+            <label>Username</label>
+            <input type="text" id="signup-username" placeholder="coolcoder123" />
+          </div>
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="signup-email" placeholder="you@example.com" />
+          </div>
+          <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="signup-password" placeholder="••••••••" />
+          </div>
+          <button class="btn btn-primary btn-full" onclick="signup()">
+            Create Account →
+          </button>
+        </div>
+
+      </div><!-- end auth-card -->
+
+      <div class="auth-footer">
+        Built with Node.js · MongoDB · SQL
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // ── Tab switcher ──
+    // Shows the right form when you click Login or Sign Up
+    function switchTab(tab) {
+      // Update which tab looks "active"
+      document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+      document.getElementById('tab-signup').classList.toggle('active', tab === 'signup');
+
+      // Show the right form, hide the other
+      document.getElementById('form-login').style.display  = tab === 'login'  ? 'block' : 'none';
+      document.getElementById('form-signup').style.display = tab === 'signup' ? 'block' : 'none';
+
+      // Clear any existing messages when switching tabs
+      clearMessage();
+    }
+
+    // ── Message helpers ──
+    function showMessage(text, type) {
+      const el = document.getElementById('message');
+      el.textContent = text;
+      el.className = `message ${type}`; // adds "error" or "success" class
+    }
+
+    function clearMessage() {
+      const el = document.getElementById('message');
+      el.className = 'message'; // removes error/success class → hides it
+    }
+
+    // ── Login ──
+    async function login() {
+      const email    = document.getElementById('login-email').value;
+      const password = document.getElementById('login-password').value;
+
+      if (!email || !password) {
+        return showMessage('Please fill in all fields', 'error');
+      }
+
+      try {
+        // fetch() sends an HTTP request from the browser — same as Postman but in code
+        const response = await fetch('/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+          // JSON.stringify converts the JS object into a JSON string to send
+        });
+
+        const data = await response.json(); // parse the response JSON
+
+        if (!response.ok) {
+          // response.ok is true for 200-299 status codes
+          return showMessage(data.error, 'error');
+        }
+
+        // Save the token to localStorage — this is how we stay "logged in"
+        // between page navigations
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('username', data.user.username);
+
+        // Redirect to the problems list page
+        window.location.href = '/problems.html';
+
+      } catch (error) {
+        showMessage('Something went wrong. Is the server running?', 'error');
+      }
+    }
+
+    // ── Signup ──
+    async function signup() {
+      const username = document.getElementById('signup-username').value;
+      const email    = document.getElementById('signup-email').value;
+      const password = document.getElementById('signup-password').value;
+
+      if (!username || !email || !password) {
+        return showMessage('Please fill in all fields', 'error');
+      }
+
+      try {
+        const response = await fetch('/auth/signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, email, password })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          return showMessage(data.error, 'error');
+        }
+
+        // Save token and redirect — same as login
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('username', data.user.username);
+        window.location.href = '/problems.html';
+
+      } catch (error) {
+        showMessage('Something went wrong. Is the server running?', 'error');
+      }
+    }
+
+    // ── Auto-redirect ──
+    // If you're already logged in (token exists), skip the login page
+    if (localStorage.getItem('token')) {
+      window.location.href = '/problems.html';
+    }
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CodeArena — Leaderboard</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    .page-header {
+      margin-bottom: 2rem;
+    }
+
+    .page-header h1 {
+      font-family: var(--font-mono);
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .page-header p {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-top: 0.3rem;
+    }
+
+    /* Leaderboard table */
+    .leaderboard-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .leaderboard-table th {
+      text-align: left;
+      padding: 0.75rem 1rem;
+      font-size: 0.8rem;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .leaderboard-table td {
+      padding: 1rem;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.95rem;
+    }
+
+    /* Rank column — big mono number */
+    .rank {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 1.1rem;
+      width: 60px;
+    }
+
+    /* Top 3 get special gold/silver/bronze colors */
+    .rank-1 { color: #f5a623; } /* gold — same as our accent */
+    .rank-2 { color: #a0aec0; } /* silver */
+    .rank-3 { color: #c05621; } /* bronze */
+
+    .username {
+      font-family: var(--font-mono);
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    /* "solved" count — shown in accent color */
+    .solved-count {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .last-submission {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    /* Highlight the logged in user's row */
+    .my-row {
+      background: rgba(245, 166, 35, 0.05);
+      border-left: 3px solid var(--accent);
+    }
+
+    .loading {
+      text-align: center;
+      padding: 3rem;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: var(--text-muted);
+    }
+
+    .empty-state h3 {
+      font-family: var(--font-mono);
+      margin-bottom: 0.5rem;
+      color: var(--text-primary);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <a href="/problems.html" class="navbar-brand">CodeArena</a>
+    <ul class="navbar-links">
+      <li><a href="/problems.html">Problems</a></li>
+      <li><a href="/leaderboard.html" class="active">Leaderboard</a></li>
+    </ul>
+    <div class="navbar-user">
+      logged in as <span id="nav-username"></span>
+      <button class="btn btn-ghost" onclick="logout()" style="padding: 0.3rem 0.8rem; font-size: 0.8rem;">
+        Logout
+      </button>
+    </div>
+  </nav>
+
+  <div class="container">
+
+    <div class="page-header">
+      <h1>Leaderboard</h1>
+      <p>Top 10 users ranked by accepted submissions.</p>
+    </div>
+
+    <div class="card" style="padding: 0; overflow: hidden;">
+
+      <div class="loading" id="loading">
+        fetching rankings...
+      </div>
+
+      <!-- Table shown once data loads -->
+      <table class="leaderboard-table" id="leaderboard-table" style="display: none;">
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>Username</th>
+            <th>Solved</th>
+            <th>Last Submission</th>
+          </tr>
+        </thead>
+        <tbody id="leaderboard-body"></tbody>
+      </table>
+
+      <div class="empty-state" id="empty-state" style="display: none;">
+        <h3>No submissions yet</h3>
+        <p>Be the first to solve a problem!</p>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // Auth check — kick to login if not logged in
+    const token = localStorage.getItem('token');
+    if (!token) window.location.href = '/index.html';
+
+    // Show username in navbar
+    const currentUsername = localStorage.getItem('username') || '';
+    document.getElementById('nav-username').textContent = currentUsername;
+
+    // ── Load leaderboard ──
+    async function loadLeaderboard() {
+      try {
+        // GET /leaderboard — no token needed, public route
+        const response = await fetch('/leaderboard');
+        const data = await response.json();
+
+        document.getElementById('loading').style.display = 'none';
+
+        if (data.length === 0) {
+          document.getElementById('empty-state').style.display = 'block';
+          return;
+        }
+
+        document.getElementById('leaderboard-table').style.display = 'table';
+
+        const tbody = document.getElementById('leaderboard-body');
+
+        data.forEach((entry, index) => {
+          const rank = index + 1; // ranks start at 1
+          const row = document.createElement('tr');
+
+          // Highlight the current user's row so they can find themselves easily
+          if (entry.username === currentUsername) {
+            row.className = 'my-row';
+          }
+
+          // Format the date nicely — "Jul 4, 2026" instead of raw timestamp
+          const date = entry.last_submission
+            ? new Date(entry.last_submission).toLocaleDateString('en-US', {
+                month: 'short', day: 'numeric', year: 'numeric'
+              })
+            : '—'; // show dash if no submissions yet
+
+          // Pick rank color — gold/silver/bronze for top 3
+          const rankClass = rank <= 3 ? `rank rank-${rank}` : 'rank';
+
+          // Medal emoji for top 3 — nice visual touch
+          const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : '';
+
+          row.innerHTML = `
+            <td class="${rankClass}">${medal || rank}</td>
+            <td class="username">${entry.username}</td>
+            <td class="solved-count">${entry.solved}</td>
+            <td class="last-submission">${date}</td>
+          `;
+
+          tbody.appendChild(row);
+        });
+
+      } catch (error) {
+        document.getElementById('loading').textContent =
+          'Failed to load leaderboard. Is the server running?';
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem('token');
+      localStorage.removeItem('username');
+      window.location.href = '/index.html';
+    }
+
+    loadLeaderboard();
+  </script>
+
+</body>
+</html>

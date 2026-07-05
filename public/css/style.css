@@ -1,0 +1,208 @@
+/* Import fonts from Google Fonts — JetBrains Mono for that IDE feel */
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@300;400;500;600&display=swap');
+
+/* CSS variables — our design tokens. Change one value here, updates everywhere */
+:root {
+  --bg-primary: #0a0e1a;       /* deep navy — main background */
+  --bg-secondary: #1e2538;     /* slate — cards, panels */
+  --bg-tertiary: #252d42;      /* slightly lighter — hover states */
+  --accent: #f5a623;           /* electric amber — buttons, highlights */
+  --accent-hover: #e09415;     /* darker amber for hover */
+  --text-primary: #e2e8f0;     /* near white — main text */
+  --text-muted: #7c8db0;       /* slate blue — secondary text */
+  --success: #10b981;          /* green — accepted verdict */
+  --error: #ef4444;            /* red — wrong answer, errors */
+  --warning: #f59e0b;          /* yellow — TLE, compilation error */
+  --border: #2e3a52;           /* subtle border color */
+  --font-mono: 'JetBrains Mono', monospace;  /* for code + headings */
+  --font-body: 'Inter', sans-serif;          /* for regular text */
+}
+
+/* Reset — remove browser default styles so we start clean */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box; /* padding doesn't add to element width */
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  min-height: 100vh;
+  line-height: 1.6;
+}
+
+/* ── Navigation bar ── */
+.navbar {
+  background-color: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  padding: 0 2rem;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky; /* stays at top when you scroll */
+  top: 0;
+  z-index: 100;
+}
+
+.navbar-brand {
+  font-family: var(--font-mono);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--accent);
+  text-decoration: none;
+  letter-spacing: -0.5px;
+}
+
+/* The blinking cursor after the brand name — our signature detail */
+.navbar-brand::after {
+  content: '_';
+  animation: blink 1.2s step-end infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+.navbar-links {
+  display: flex;
+  gap: 2rem;
+  list-style: none;
+}
+
+.navbar-links a {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.navbar-links a:hover,
+.navbar-links a.active {
+  color: var(--text-primary);
+}
+
+.navbar-user {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.navbar-user span {
+  color: var(--accent);
+  font-family: var(--font-mono);
+}
+
+/* ── Buttons ── */
+.btn {
+  padding: 0.6rem 1.4rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.btn-primary {
+  background-color: var(--accent);
+  color: #0a0e1a; /* dark text on amber button — high contrast */
+  font-family: var(--font-mono);
+  font-weight: 700;
+}
+
+.btn-primary:hover {
+  background-color: var(--accent-hover);
+  transform: translateY(-1px); /* subtle lift on hover */
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+
+.btn-ghost:hover {
+  color: var(--text-primary);
+  border-color: var(--text-muted);
+}
+
+/* ── Cards ── */
+.card {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.5rem;
+}
+
+/* ── Difficulty badges ── */
+.badge {
+  padding: 0.2rem 0.7rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-family: var(--font-mono);
+}
+
+.badge-easy   { background: rgba(16,185,129,0.15); color: var(--success); }
+.badge-medium { background: rgba(245,158,11,0.15); color: var(--warning); }
+.badge-hard   { background: rgba(239,68,68,0.15);  color: var(--error); }
+
+/* ── Verdict colors ── */
+.verdict-accepted    { color: var(--success); }
+.verdict-wrong       { color: var(--error); }
+.verdict-tle         { color: var(--warning); }
+.verdict-error       { color: var(--error); }
+
+/* ── Main layout ── */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+/* ── Forms ── */
+.form-group {
+  margin-bottom: 1.2rem;
+}
+
+.form-group label {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 0.4rem;
+  font-family: var(--font-mono);
+}
+
+.form-group input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  font-family: var(--font-body);
+  transition: border-color 0.2s;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+/* ── Utility ── */
+.text-muted   { color: var(--text-muted); }
+.text-accent  { color: var(--accent); }
+.text-mono    { font-family: var(--font-mono); }
+.mt-1 { margin-top: 0.5rem; }
+.mt-2 { margin-top: 1rem; }
+.mt-3 { margin-top: 1.5rem; }

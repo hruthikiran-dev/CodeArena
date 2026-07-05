@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CodeArena — Problems</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    /* Page specific styles */
+
+    .page-header {
+      margin-bottom: 2rem;
+    }
+
+    .page-header h1 {
+      font-family: var(--font-mono);
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .page-header p {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-top: 0.3rem;
+    }
+
+    /* The problems table */
+    .problems-table {
+      width: 100%;
+      border-collapse: collapse; /* removes gaps between table cells */
+    }
+
+    .problems-table th {
+      text-align: left;
+      padding: 0.75rem 1rem;
+      font-size: 0.8rem;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .problems-table td {
+      padding: 1rem;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.95rem;
+    }
+
+    /* Each row is clickable — takes you to the problem page */
+    .problems-table tr.problem-row {
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .problems-table tr.problem-row:hover {
+      background: var(--bg-tertiary);
+    }
+
+    .problem-title {
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+
+    .problem-number {
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      width: 60px;
+    }
+
+    /* Loading state shown while fetching problems */
+    .loading {
+      text-align: center;
+      padding: 3rem;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+
+    /* Shown if there are no problems yet */
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: var(--text-muted);
+    }
+
+    .empty-state h3 {
+      font-family: var(--font-mono);
+      margin-bottom: 0.5rem;
+      color: var(--text-primary);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <a href="/problems.html" class="navbar-brand">CodeArena</a>
+    <ul class="navbar-links">
+      <li><a href="/problems.html" class="active">Problems</a></li>
+      <li><a href="/leaderboard.html">Leaderboard</a></li>
+    </ul>
+    <div class="navbar-user">
+      <!-- username filled in by JS below -->
+      logged in as <span id="nav-username"></span>
+      <button class="btn btn-ghost" onclick="logout()" style="padding: 0.3rem 0.8rem; font-size: 0.8rem;">
+        Logout
+      </button>
+    </div>
+  </nav>
+
+  <div class="container">
+
+    <div class="page-header">
+      <h1>Problems</h1>
+      <p>Pick a problem, write your solution, get it accepted.</p>
+    </div>
+
+    <!-- The card that holds the table -->
+    <div class="card" style="padding: 0; overflow: hidden;">
+
+      <!-- Loading text shown while fetch() is running -->
+      <div class="loading" id="loading">
+        fetching problems...
+      </div>
+
+      <!-- The actual table — hidden until problems load -->
+      <table class="problems-table" id="problems-table" style="display: none;">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Title</th>
+            <th>Difficulty</th>
+          </tr>
+        </thead>
+        <!-- tbody is where JS will inject the problem rows -->
+        <tbody id="problems-body"></tbody>
+      </table>
+
+      <!-- Shown if no problems exist in the database yet -->
+      <div class="empty-state" id="empty-state" style="display: none;">
+        <h3>No problems yet</h3>
+        <p>Add some problems via POST /problems in Postman</p>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // ── Auth check ──
+    // If no token, kick them back to login page
+    const token = localStorage.getItem('token');
+    if (!token) {
+      window.location.href = '/index.html';
+    }
+
+    // Show username in navbar
+    document.getElementById('nav-username').textContent =
+      localStorage.getItem('username') || 'unknown';
+
+    // ── Fetch and display problems ──
+    async function loadProblems() {
+      try {
+        // GET /problems — no token needed (public route)
+        const response = await fetch('/problems');
+        const problems = await response.json();
+
+        // Hide the loading text
+        document.getElementById('loading').style.display = 'none';
+
+        if (problems.length === 0) {
+          // No problems in DB yet — show empty state
+          document.getElementById('empty-state').style.display = 'block';
+          return;
+        }
+
+        // Show the table
+        document.getElementById('problems-table').style.display = 'table';
+
+        const tbody = document.getElementById('problems-body');
+
+        // Loop through each problem and create a table row for it
+        problems.forEach((problem, index) => {
+          const row = document.createElement('tr');
+          row.className = 'problem-row';
+
+          // Clicking a row navigates to the problem page
+          // We pass the problem ID in the URL as a "query parameter"
+          // e.g. /problem.html?id=abc123
+          row.onclick = () => {
+            window.location.href = `/problem.html?id=${problem._id}`;
+          };
+
+          // difficulty badge class — easy/medium/hard
+          const difficultyClass = `badge badge-${problem.difficulty.toLowerCase()}`;
+
+          // Build the HTML for this row
+          row.innerHTML = `
+            <td class="problem-number">${index + 1}</td>
+            <td class="problem-title">${problem.title}</td>
+            <td><span class="${difficultyClass}">${problem.difficulty}</span></td>
+          `;
+
+          tbody.appendChild(row); // add the row to the table
+        });
+
+      } catch (error) {
+        document.getElementById('loading').textContent =
+          'Failed to load problems. Is the server running?';
+      }
+    }
+
+    // ── Logout ──
+    function logout() {
+      // Remove token and username from localStorage
+      localStorage.removeItem('token');
+      localStorage.removeItem('username');
+      // Redirect to login
+      window.location.href = '/index.html';
+    }
+
+    // Run when page loads
+    loadProblems();
+  </script>
+
+</body>
+</html>
